@@ -1,0 +1,45 @@
+#include <Wire.h>
+
+const byte MAX30205_ADDR = 0x48;
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+}
+
+void loop() {
+  float c = readTempC();
+
+  if (c == -1000) {
+    Serial.println("Sensor read error");
+  } else {
+    float f = (c * 9.0 / 5.0) + 32.0;
+
+    Serial.print("Temp C: ");
+    Serial.print(c);
+    Serial.print(" | Temp F: ");
+    Serial.println(f);
+  }
+
+  delay(1000);
+}
+
+float readTempC() {
+  Wire.beginTransmission(MAX30205_ADDR);
+  Wire.write(0x00); // temperature register
+  Wire.endTransmission();
+
+
+  Wire.requestFrom(MAX30205_ADDR, (byte)2);
+
+  if (Wire.available() == 2) {
+    int8_t msb = Wire.read();
+    uint8_t lsb = Wire.read();
+
+    int16_t raw = (int16_t)((msb << 8) | lsb);
+
+    return raw / 256.0;
+  }
+
+  return -1000;
+}
